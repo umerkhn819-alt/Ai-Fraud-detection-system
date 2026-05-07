@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -76,4 +76,4 @@ def change_password(
     current_user.hashed_password = hash_password(body.new_password)
     db.add(current_user)
     db.commit()
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

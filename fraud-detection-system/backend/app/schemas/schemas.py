@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -21,6 +21,11 @@ class UserResponse(BaseModel):
     role:       str
     is_active:  bool
     created_at: datetime
+
+    @field_validator("role", mode="before")
+    @classmethod
+    def _role_as_str(cls, v):
+        return v.value if hasattr(v, "value") else str(v)
 
     class Config:
         from_attributes = True   # lets Pydantic read SQLAlchemy model fields
@@ -82,6 +87,11 @@ class TransactionResponse(BaseModel):
     status:            str
     timestamp:         datetime
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def _status_as_str(cls, v):
+        return v.value if hasattr(v, "value") else str(v)
+
     class Config:
         from_attributes = True
 
@@ -107,6 +117,13 @@ class PredictionResponse(BaseModel):
     severity:          Optional[str]
     features_used:     Optional[str]
     predicted_at:      datetime
+
+    @field_validator("severity", mode="before")
+    @classmethod
+    def _severity_as_str(cls, v):
+        if v is None:
+            return None
+        return v.value if hasattr(v, "value") else str(v)
 
     class Config:
         from_attributes = True

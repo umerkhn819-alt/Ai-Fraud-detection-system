@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -9,7 +11,13 @@ from app.api.routes import auth, dashboard, explain, history, predict, transacti
 
 load_dotenv()
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as exc:
+    logging.getLogger(__name__).warning(
+        "Database not reachable for create_all (%s). Start PostgreSQL or set DATABASE_URL.",
+        exc,
+    )
 
 app = FastAPI(
     title=settings.API_TITLE,
