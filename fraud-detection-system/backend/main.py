@@ -1,15 +1,23 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+
+from app.core.config import settings
 from app.core.database import engine
 from app.models.models import Base
-from app.core.config import settings
+from app.api.routes import auth, dashboard, explain, history, predict, transactions, users
 
 load_dotenv()
 
-# Auto-create all tables if they don't exist yet
-# (Alembic handles this in production — this is for dev convenience)
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as exc:
+    logging.getLogger(__name__).warning(
+        "Database not reachable for create_all (%s). Start PostgreSQL or set DATABASE_URL.",
+        exc,
+    )
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -27,14 +35,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Routers will be added phase by phase ─────────────────────
-# from app.api.routes import auth, transactions, predict, explain, dashboard, history
-# app.include_router(auth.router)
-# app.include_router(transactions.router)
-# app.include_router(predict.router)
-# app.include_router(explain.router)
-# app.include_router(dashboard.router)
-# app.include_router(history.router)
+app.include_router(auth.router)
+app.include_router(transactions.router)
+app.include_router(predict.router)
+app.include_router(explain.router)
+app.include_router(dashboard.router)
+app.include_router(history.router)
+app.include_router(users.router)
+
+
+@app.get("/config/public", tags=["Health"])
+def public_config():
+    return {"fraud_threshold": settings.FRAUD_THRESHOLD, "api_version": settings.API_VERSION}
+
 
 @app.get("/", tags=["Health"])
 def root():
@@ -44,6 +57,7 @@ def root():
         "environment": settings.ENVIRONMENT,
         "docs": "/docs",
     }
+
 
 @app.get("/health", tags=["Health"])
 def health():

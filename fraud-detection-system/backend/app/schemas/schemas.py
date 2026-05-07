@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -22,6 +22,11 @@ class UserResponse(BaseModel):
     is_active:  bool
     created_at: datetime
 
+    @field_validator("role", mode="before")
+    @classmethod
+    def _role_as_str(cls, v):
+        return v.value if hasattr(v, "value") else str(v)
+
     class Config:
         from_attributes = True   # lets Pydantic read SQLAlchemy model fields
 
@@ -41,6 +46,7 @@ class TokenResponse(BaseModel):
 
 class TransactionCreate(BaseModel):
     amount:            float           = Field(..., gt=0, example=149.99)
+    time_seconds:      Optional[float] = Field(0.0, description="Kaggle Time column; defaults 0 for manual entry")
     merchant_name:     Optional[str]   = Field(None, example="Amazon")
     merchant_category: Optional[str]   = Field(None, example="e-commerce")
     card_last4:        Optional[str]   = Field(None, max_length=4, example="4242")
@@ -71,6 +77,7 @@ class TransactionResponse(BaseModel):
     id:                int
     transaction_ref:   str
     amount:            float
+    time_seconds:      float = 0.0
     merchant_name:     Optional[str]
     merchant_category: Optional[str]
     card_last4:        Optional[str]
@@ -79,6 +86,11 @@ class TransactionResponse(BaseModel):
     location_country:  Optional[str]
     status:            str
     timestamp:         datetime
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _status_as_str(cls, v):
+        return v.value if hasattr(v, "value") else str(v)
 
     class Config:
         from_attributes = True
@@ -105,6 +117,13 @@ class PredictionResponse(BaseModel):
     severity:          Optional[str]
     features_used:     Optional[str]
     predicted_at:      datetime
+
+    @field_validator("severity", mode="before")
+    @classmethod
+    def _severity_as_str(cls, v):
+        if v is None:
+            return None
+        return v.value if hasattr(v, "value") else str(v)
 
     class Config:
         from_attributes = True
@@ -161,6 +180,11 @@ class FraudOverTimeResponse(BaseModel):
     data: List[FraudOverTimePoint]
 
 
+class SeverityCount(BaseModel):
+    severity: str
+    count: int
+
+
 # ─────────────────────────────────────────────────────────────
 # CSV UPLOAD RESPONSE
 # ─────────────────────────────────────────────────────────────
@@ -175,6 +199,22 @@ class CSVUploadResponse(BaseModel):
 # ─────────────────────────────────────────────────────────────
 # AUDIT LOG SCHEMA
 # ─────────────────────────────────────────────────────────────
+
+class PaginatedPredictions(BaseModel):
+    items: List[PredictionResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class PasswordUpdateRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8)
+
+
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = Field(None, min_length=2, max_length=100)
+
 
 class AuditLogResponse(BaseModel):
     id:          int

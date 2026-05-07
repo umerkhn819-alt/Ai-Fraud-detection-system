@@ -67,6 +67,7 @@ class Transaction(Base):
     id                = Column(Integer, primary_key=True, index=True)
     transaction_ref   = Column(String(64), unique=True, index=True, nullable=False)  # e.g. TXN-2024-A1B2C3
     amount            = Column(Float, nullable=False)
+    time_seconds      = Column(Float, default=0.0, nullable=False)  # Kaggle \"Time\" feature (seconds)
     merchant_name     = Column(String(200), nullable=True)
     merchant_category = Column(String(100), nullable=True)
     card_last4        = Column(String(4),   nullable=True)
