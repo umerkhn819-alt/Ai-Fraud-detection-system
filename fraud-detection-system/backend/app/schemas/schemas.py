@@ -41,6 +41,7 @@ class TokenResponse(BaseModel):
 
 class TransactionCreate(BaseModel):
     amount:            float           = Field(..., gt=0, example=149.99)
+    time_seconds:      Optional[float] = Field(0.0, description="Kaggle Time column; defaults 0 for manual entry")
     merchant_name:     Optional[str]   = Field(None, example="Amazon")
     merchant_category: Optional[str]   = Field(None, example="e-commerce")
     card_last4:        Optional[str]   = Field(None, max_length=4, example="4242")
@@ -71,6 +72,7 @@ class TransactionResponse(BaseModel):
     id:                int
     transaction_ref:   str
     amount:            float
+    time_seconds:      float = 0.0
     merchant_name:     Optional[str]
     merchant_category: Optional[str]
     card_last4:        Optional[str]
@@ -161,6 +163,11 @@ class FraudOverTimeResponse(BaseModel):
     data: List[FraudOverTimePoint]
 
 
+class SeverityCount(BaseModel):
+    severity: str
+    count: int
+
+
 # ─────────────────────────────────────────────────────────────
 # CSV UPLOAD RESPONSE
 # ─────────────────────────────────────────────────────────────
@@ -175,6 +182,22 @@ class CSVUploadResponse(BaseModel):
 # ─────────────────────────────────────────────────────────────
 # AUDIT LOG SCHEMA
 # ─────────────────────────────────────────────────────────────
+
+class PaginatedPredictions(BaseModel):
+    items: List[PredictionResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class PasswordUpdateRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8)
+
+
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = Field(None, min_length=2, max_length=100)
+
 
 class AuditLogResponse(BaseModel):
     id:          int
