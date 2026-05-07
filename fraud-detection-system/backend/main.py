@@ -44,6 +44,11 @@ app.include_router(history.router)
 app.include_router(users.router)
 
 
+@app.get("/config/public", tags=["Health"])
+def public_config():
+    return {"fraud_threshold": settings.FRAUD_THRESHOLD, "api_version": settings.API_VERSION}
+
+
 @app.get("/", tags=["Health"])
 def root():
     return {
