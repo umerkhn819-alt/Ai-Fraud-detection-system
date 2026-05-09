@@ -12,7 +12,7 @@ from app.schemas.schemas import (
     UserProfileUpdate,
     UserResponse,
 )
-from app.services import auth_service
+from app.services import auth_service, audit_service
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -25,6 +25,14 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         email=str(user_data.email),
         password=user_data.password,
         role=user_data.role,
+    )
+    audit_service.log_action(
+        db,
+        user_id=user.id,
+        action="register",
+        resource="user",
+        resource_id=user.id,
+        details={"email": user.email, "role": user.role.value},
     )
     return user
 
@@ -42,6 +50,14 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
+    audit_service.log_action(
+        db,
+        user_id=user.id,
+        action="login",
+        resource="user",
+        resource_id=user.id,
+        details={"email": user.email},
+    )
     token = create_access_token({"sub": str(user.id), "role": user.role.value})
     return TokenResponse(access_token=token, token_type="bearer", user=user)
 
