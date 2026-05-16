@@ -34,26 +34,63 @@ def get_dashboard_stats(db: Session) -> dict[str, Any]:
 
 
 def fraud_over_time(db: Session) -> List[dict[str, Any]]:
-    day = func.date(FraudPrediction.predicted_at).label("d")
+    # First attempt: Group by Kaggle time_seconds into 1-hour buckets (48 hours total)
     rows = (
         db.query(
-            day,
+            cast(Transaction.time_seconds / 3600, Integer).label("hour_bucket"),
             func.count(FraudPrediction.id).label("total"),
             func.sum(cast(FraudPrediction.is_fraud, Integer)).label("fraud_count"),
         )
-        .group_by(day)
-        .order_by(day)
+        .join(Transaction, Transaction.id == FraudPrediction.transaction_id)
+        .group_by(cast(Transaction.time_seconds / 3600, Integer))
+        .order_by(cast(Transaction.time_seconds / 3600, Integer))
         .all()
     )
+    
     out: List[dict[str, Any]] = []
     for r in rows:
+        bucket = int(r.hour_bucket or 0)
+        day = (bucket // 24) + 1
+        hour = bucket % 24
+        
+        # Determine AM/PM for a nicer display
+        am_pm = "AM" if hour < 12 else "PM"
+        display_hour = hour if hour <= 12 else hour - 12
+        display_hour = 12 if display_hour == 0 else display_hour
+        
+        time_str = f"Day {day}, {display_hour:02d}:00 {am_pm}"
+        
         out.append(
             {
-                "date": str(r.d) if r.d is not None else "",
+                "date": time_str,
                 "total": int(r.total or 0),
                 "fraud": int(r.fraud_count or 0),
             }
         )
+        
+    # If there are 0 or 1 buckets (e.g. all manual entries at time_seconds=0), fallback to Live Minutes
+    if len(out) <= 1:
+        minute = func.date_trunc('minute', FraudPrediction.predicted_at).label("m")
+        rows_live = (
+            db.query(
+                minute,
+                func.count(FraudPrediction.id).label("total"),
+                func.sum(cast(FraudPrediction.is_fraud, Integer)).label("fraud_count"),
+            )
+            .group_by(minute)
+            .order_by(minute)
+            .limit(60)
+            .all()
+        )
+        out = []
+        for r in rows_live:
+            out.append(
+                {
+                    "date": r.m.strftime("%H:%M") if r.m else "",
+                    "total": int(r.total or 0),
+                    "fraud": int(r.fraud_count or 0),
+                }
+            )
     return out
 
 

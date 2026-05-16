@@ -13,8 +13,12 @@ export async function listTransactions(params = {}) {
 export async function uploadCsv(file) {
   const form = new FormData()
   form.append('file', file)
-  const { data } = await api.post('/transactions/upload-csv', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  // Do NOT set Content-Type manually — axios auto-adds the correct boundary for FormData
+  const { data } = await api.post('/transactions/upload-csv', form)
+  return data
+}
+
+export async function resetData() {
+  const { data } = await api.delete('/transactions/admin/reset-data')
   return data
 }

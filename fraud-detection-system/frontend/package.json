@@ -11,12 +11,17 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
+    "@xyflow/react": "^12.10.2",
     "axios": "^1.7.9",
     "clsx": "^2.1.1",
+    "d3-scale": "^4.0.2",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.0",
+    "react-simple-maps": "^3.0.0",
+    "react-zoom-pan-pinch": "^4.0.3",
     "recharts": "^2.15.0",
     "tailwind-merge": "^2.6.0"
   },

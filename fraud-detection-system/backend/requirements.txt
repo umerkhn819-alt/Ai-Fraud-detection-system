@@ -1,4 +1,4 @@
-﻿fastapi
+fastapi
 uvicorn
 sqlalchemy
 alembic
@@ -15,8 +15,9 @@ joblib
 scikit-learn
 imbalanced-learn
 xgboost
-torch
 langchain
 langchain-openai
 openai
 email-validator
+redis
+httpx

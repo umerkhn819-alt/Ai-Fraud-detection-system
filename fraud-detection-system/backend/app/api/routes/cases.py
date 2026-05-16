@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
@@ -25,6 +25,7 @@ def list_cases(
             "transaction_id": c.transaction_id,
             "transaction_ref": c.transaction.transaction_ref if c.transaction else None,
             "amount": c.transaction.amount if c.transaction else None,
+            "event_metadata": c.transaction.event_metadata if c.transaction else None,
             "reviewed_by": c.reviewed_by,
             "reviewer_name": c.reviewed_by_user.full_name if c.reviewed_by_user else None,
             "is_confirmed": c.is_confirmed,

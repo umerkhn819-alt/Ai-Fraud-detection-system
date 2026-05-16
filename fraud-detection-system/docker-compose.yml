@@ -30,9 +30,13 @@ services:
     environment:
       DATABASE_URL: postgresql://fraud_user:fraud1234@db:5432/fraud_detection
       REDIS_URL: redis://redis:6379/0
-      MODEL_PATH: ../ml/models/saved/fraud_model.joblib
-      SCALER_PATH: ../ml/models/saved/scaler.joblib
-      PYTORCH_MODEL_PATH: ../ml/models/saved/pytorch_model.pth
+      # Absolute paths inside the container (volume mounted at /app/ml/models/saved)
+      MODEL_PATH: /app/ml/models/saved/fraud_model.joblib
+      SCALER_PATH: /app/ml/models/saved/scaler.joblib
+      PYTORCH_MODEL_PATH: /app/ml/models/saved/pytorch_model.pth
+      MODEL_TRAINING_METADATA_PATH: /app/ml/models/saved/model_training_metadata.json
+      JWT_SECRET_KEY: dev-fraud-platform-secret-key-min-32-chars-change-me
+      CORS_ORIGINS: '["http://localhost:5173","http://localhost:5174","http://localhost:3000"]'
     env_file:
       - ./backend/.env
     volumes:
@@ -43,7 +47,22 @@ services:
       redis:
         condition: service_started
     command: >
-      sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
+      sh -c "alembic upgrade head && python -c 'from app.services.auth_service import seed_admin; from app.core.database import SessionLocal; db=SessionLocal(); seed_admin(db); db.close()' && uvicorn main:app --host 0.0.0.0 --port 8000"
+
+  celery_worker:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://fraud_user:fraud1234@db:5432/fraud_detection
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: "celery -A app.core.celery_app.celery_app worker --loglevel=info"
 
   frontend:
     build:

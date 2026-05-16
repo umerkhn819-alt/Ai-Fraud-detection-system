@@ -20,6 +20,7 @@ class UserResponse(BaseModel):
     email:      str
     role:       str
     is_active:  bool
+    tenant_id:  Optional[int] = None
     created_at: datetime
 
     @field_validator("role", mode="before")
@@ -86,6 +87,7 @@ class TransactionResponse(BaseModel):
     location_country:  Optional[str]
     status:            str
     timestamp:         datetime
+    ground_truth_class: Optional[int] = None
 
     @field_validator("status", mode="before")
     @classmethod

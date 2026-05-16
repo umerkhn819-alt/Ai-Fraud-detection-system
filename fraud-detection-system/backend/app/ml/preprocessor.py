@@ -1,9 +1,16 @@
 """Build feature vectors matching training pipeline (Time, Amount, V1–V28)."""
 from __future__ import annotations
 
+import hashlib
+from typing import Tuple
+
 import numpy as np
 
 from app.models.models import Transaction
+
+# Must match `FEATURE_NAMES` in ml/src/preprocessing.py (order-sensitive).
+FEATURE_ORDER_DISPLAY: Tuple[str, ...] = ("Time", "Amount") + tuple(f"V{i}" for i in range(1, 29))
+FEATURE_ORDER_HASH: str = hashlib.sha256(",".join(FEATURE_ORDER_DISPLAY).encode("utf-8")).hexdigest()
 
 
 def transaction_to_matrix(transaction: Transaction) -> np.ndarray:

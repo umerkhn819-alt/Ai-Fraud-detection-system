@@ -6,7 +6,7 @@ from app.core.security import get_current_user
 from app.models.models import FraudPrediction, User
 from app.schemas.schemas import PredictRequest, PredictionResponse
 from app.services.explanation_service import generate_explanation
-from app.services import prediction_service
+from app.services import audit_service, prediction_service
 from app.services import transaction_service
 
 router = APIRouter(prefix="/predict", tags=["Prediction"])
@@ -28,6 +28,14 @@ async def predict_fraud(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(e),
         ) from e
+    audit_service.log_action(
+        db,
+        user_id=current_user.id,
+        action="run_prediction",
+        resource="prediction",
+        resource_id=prediction.id,
+        details={"transaction_id": transaction.id, "is_fraud": prediction.is_fraud},
+    )
     return prediction
 
 

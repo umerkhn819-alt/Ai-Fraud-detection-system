@@ -21,12 +21,16 @@ class Settings(BaseSettings):
 
     # ── OpenAI / LangChain ───────────────────────
     OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "google/gemma-4-26b-a4b-it:free"
+    OPENAI_BASE_URL: str = "https://openrouter.ai/api/v1"
 
     # ── ML Models ────────────────────────────────
     MODEL_PATH:        str   = "../ml/models/saved/fraud_model.joblib"
     SCALER_PATH:       str   = "../ml/models/saved/scaler.joblib"
+    MODEL_TRAINING_METADATA_PATH: str = "../ml/models/saved/model_training_metadata.json"
     PYTORCH_MODEL_PATH:str   = "../ml/models/saved/pytorch_model.pth"
     FRAUD_THRESHOLD:   float = 0.5
+    RULE_DELTA_MAX:    float = 0.15
 
     # ── CORS ─────────────────────────────────────
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]

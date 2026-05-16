@@ -6,12 +6,14 @@ import Sidebar from './Sidebar'
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[var(--bg-primary)]">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex flex-1 flex-col lg:pl-0">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar onMenu={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-4 lg:p-6">
-          <Outlet />
+        <main className="flex-1 overflow-auto p-4 lg:p-6">
+          <div className="animate-in">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
